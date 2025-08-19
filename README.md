@@ -71,8 +71,7 @@ streamlit run app/streamlit_app.py
 (Invoke-RestMethod http://localhost:6333/collections).result.collections | Select-Object name
 
 # Delete (examples)
-Invoke-RestMethod -Method DELETE http://localhost:6333/collections/taxlaw
-Invoke-RestMethod -Method DELETE http://localhost:6333/collections/taxlaw_multilingual
+Invoke-RestMethod -Method DELETE http://localhost:6333/collections/book
 ```
 
 ### Project Structure
