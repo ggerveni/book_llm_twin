@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.build/
+.dist/
+.pytest_cache/
+.mypy_cache/
+
+# Environments
+.venv/
+venv/
+.env
+.env.*
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# ZenML
+.zen/
+.zenml/
+
+# Data & storage (keep folder structure with .gitkeep files as needed)
+data/raw/**
+!data/raw/.gitkeep
+qdrant_storage/**
+
+# Logs
+logs/
+*.log
+
+# Notebooks
+.ipynb_checkpoints/
