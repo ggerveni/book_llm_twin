@@ -21,65 +21,6 @@ def _format_error(prefix: str, err: Exception) -> str:
         f"(Check the Ollama service at {host} and the model name/tag in the sidebar.)"
     )
 
-
-def generate_answer(
-    question: str,
-    contexts: List[Dict[str, str]],
-    model: Optional[str] = None,
-    max_tokens: Optional[int] = None,
-) -> str:
-    """Generate an answer using a local Ollama model, grounded on contexts."""
-
-    model_name = model or os.getenv("OLLAMA_MODEL")
-    if not model_name:
-        return "OLLAMA_MODEL is not set. Define it in your .env file."
-    prompt = build_prompt(question, contexts)
-
-    # Limit tokens for faster responses on low-resource machines
-    num_predict = max_tokens or int(os.getenv("OLLAMA_NUM_PREDICT", "256"))
-    temperature = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
-
-    try:
-        response = ollama.generate(
-            model=model_name,
-            prompt=prompt,
-            options={
-                "num_predict": num_predict,
-                "temperature": temperature,
-            },
-        )
-        text = response.get("response", "").strip()
-        if text:
-            return text
-    except Exception as err:
-        # Surface the error message to the UI instead of failing silently
-        return _format_error("Error during generate()", err)
-
-    # Fallback to chat API
-    messages = build_messages(question, contexts)
-    try:
-        response = ollama.chat(
-            model=model_name,
-            messages=messages,
-            options={
-                "num_predict": num_predict,
-                "temperature": temperature,
-            },
-        )
-        text = (response.get("message", {}) or {}).get("content", "").strip()
-        if text:
-            return text
-    except Exception as err:
-        return _format_error("Error during chat()", err)
-
-    # If still empty, provide a helpful hint
-    return (
-        "No answer was generated.\n"
-        "- Try a shorter question.\n"
-        "- Lower `Top-K` in the sidebar.\n"
-        "- Try a different model (e.g., `llama3:instruct`)."
-    )
-
 def generate_answer_stream(
     question: str,
     contexts: List[Dict[str, str]],

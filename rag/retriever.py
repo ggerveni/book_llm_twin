@@ -7,6 +7,7 @@ from typing import List, Dict, Optional
 
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.models import Filter, PointStruct
 from sentence_transformers import SentenceTransformer
 
@@ -80,13 +81,27 @@ class QdrantRetriever:
                 f"Re-ingest with the same embedding model or switch to the model used for ingestion."
             )
 
-        results = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_vec,
-            limit=self.top_k,
-            with_payload=True,
-            score_threshold=score_threshold,
-        )
+        try:
+            results = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=query_vec,
+                limit=self.top_k,
+                with_payload=True,
+                score_threshold=score_threshold,
+            )
+        except UnexpectedResponse as e:
+            msg = str(e)
+            hint = (
+                "Qdrant returned an error during search. This is often caused by a vector dimension mismatch. "
+                f"Query vector dim = {len(query_vec)} from '{self.embedding_model_name}'. "
+            )
+            if expected_dim:
+                hint += f"Collection expects dim = {expected_dim}. "
+            hint += (
+                "Re-ingest your data with the same embedding model you're using for retrieval, "
+                "or switch the retrieval embedding to match the model used at ingestion, or recreate the collection."
+            )
+            raise ValueError(hint + (f"\nRaw error: {msg}" if msg else ""))
 
         retrieved: List[RetrievedChunk] = []
         for hit in results:

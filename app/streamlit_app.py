@@ -12,7 +12,7 @@ import logging
 from dotenv import load_dotenv
 
 from rag.retriever import QdrantRetriever
-from rag.generator import generate_answer, generate_answer_stream
+from rag.generator import generate_answer_stream
 
 
 load_dotenv()
@@ -50,7 +50,8 @@ with st.sidebar:
 	st.subheader("Generation")
 	num_predict = st.slider("Max tokens (num_predict)", 32, 1024, int(os.getenv("OLLAMA_NUM_PREDICT", "256")), 32)
 	temperature = st.slider("Temperature", 0.0, 1.5, float(os.getenv("OLLAMA_TEMPERATURE", "0.2")), 0.05)
-	stream_mode = st.toggle("Stream tokens", value=True)
+	# Always stream tokens in this simplified version
+	stream_mode = True
 
 	st.subheader("Prompt limits")
 	prompt_max_contexts = st.number_input("Max contexts", 1, 10, int(os.getenv("PROMPT_MAX_CONTEXTS", "4")))
@@ -82,35 +83,21 @@ if ask and query.strip():
 	os.environ["OLLAMA_TEMPERATURE"] = str(float(temperature))
 
 	answer_container = st.empty()
-	if stream_mode:
-		streamed_text = []
-		gen_status = st.status("Generating answer...", state="running")
-		try:
-			for chunk in generate_answer_stream(
-				question=query,
-				contexts=ctx,
-				model=ollama_model,
-				max_tokens=int(num_predict),
-				temperature=float(temperature),
-			):
-				streamed_text.append(chunk)
-				answer_container.write("".join(streamed_text))
-			gen_status.update(label="Answer generation completed", state="complete")
-		except Exception as e:
-			gen_status.update(label=f"Answer generation failed: {e}", state="error")
-	else:
-		gen_status = st.status("Generating answer...", state="running")
-		try:
-			answer = generate_answer(
-				question=query,
-				contexts=ctx,
-				model=ollama_model,
-				max_tokens=int(num_predict),
-			)
-			answer_container.write(answer)
-			gen_status.update(label="Answer generation completed", state="complete")
-		except Exception as e:
-			gen_status.update(label=f"Answer generation failed: {e}", state="error")
+	streamed_text = []
+	gen_status = st.status("Generating answer...", state="running")
+	try:
+		for chunk in generate_answer_stream(
+			question=query,
+			contexts=ctx,
+			model=ollama_model,
+			max_tokens=int(num_predict),
+			temperature=float(temperature),
+		):
+			streamed_text.append(chunk)
+			answer_container.write("".join(streamed_text))
+		gen_status.update(label="Answer generation completed", state="complete")
+	except Exception as e:
+		gen_status.update(label=f"Answer generation failed: {e}", state="error")
 
 	st.subheader("Sources")
 	for i, h in enumerate(hits, start=1):
