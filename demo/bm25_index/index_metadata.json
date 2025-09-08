@@ -1,0 +1,10 @@
+{
+  "num_documents": 6,
+  "vocab_size": 74,
+  "avg_doc_length": 15.5,
+  "parameters": {
+    "k1": 1.2,
+    "b": 0.75,
+    "epsilon": 0.25
+  }
+}
